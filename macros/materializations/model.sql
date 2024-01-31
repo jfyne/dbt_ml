@@ -36,6 +36,18 @@
     {%- do return(options) -%}
 {%- endmacro -%}
 
+{% macro model_transform(ml_transform) %}
+
+    {% set transform -%}
+        transform(
+            {{ ', '.join(ml_transform) }}
+        )
+    {%- endset %}
+
+    {%- do return(transform) -%}
+
+{%- endmacro -%}
+
 {% macro create_model_as(relation, sql) -%}
     {{
         adapter.dispatch(
@@ -51,6 +63,7 @@
 {% endmacro %}
 
 {% macro bigquery__create_model_as(relation, sql) %}
+    {%- set ml_transform = config.get('ml_transform', []) -%}
     {%- set ml_config = config.get('ml_config', {}) -%}
     {%- set raw_labels = config.get('labels', {}) -%}
     {%- set sql_header = config.get('sql_header', none) -%}
@@ -58,6 +71,7 @@
     {{ sql_header if sql_header is not none }}
 
     create or replace model {{ relation }}
+    {{ dbt_ml.model_transform(ml_transform=ml_transform) if len(ml_transform) != 0 }}
     {{ dbt_ml.model_options(
         ml_config=ml_config,
         labels=raw_labels

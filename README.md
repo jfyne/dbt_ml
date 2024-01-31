@@ -134,8 +134,28 @@ dispatch:
     search_order: ['my_project', 'dbt_ml']  # enable override
 ```
 
+### Transform
+BigQuery ML supports preprocessing during model creation<sup>[3]</sup>. This will be automatically applied during prediction and evaluation.
+
+The following defines a TRANSFORM during model creation.
+```sql
+{{
+    config(
+        ml_transform=[
+            'ML.FEATURE_CROSS(STRUCT(f1, f2)) as cross_f',
+            'ML.QUANTILE_BUCKETIZE(f3) OVER() as buckets',
+            'label_col'
+        ],
+        ml_config={
+            'model_type': 'linear_reg',
+            'input_label_cols': ['label_col'],
+        }
+    )
+}}
+```
+
 ### Reservations
-Some BigQuery ML models, e.g. Matrix Factorization, cannot be run using the on-demand pricing model. In order to train such models, please set up a flex or regular reservation<sup>[3]</sup>  prior to running the model.
+Some BigQuery ML models, e.g. Matrix Factorization, cannot be run using the on-demand pricing model. In order to train such models, please set up a flex or regular reservation<sup>[4]</sup>  prior to running the model.
 
 ### Footnotes
 
@@ -143,7 +163,9 @@ Some BigQuery ML models, e.g. Matrix Factorization, cannot be run using the on-d
 
 [2] https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-hyperparameter-tuning
 
-[3] https://cloud.google.com/bigquery/docs/reservations-tasks
+[3] https://cloud.google.com/bigquery/docs/reference/standard-sql/bigqueryml-syntax-create#transform
+
+[4] https://cloud.google.com/bigquery/docs/reservations-tasks
 
 ### References
 
