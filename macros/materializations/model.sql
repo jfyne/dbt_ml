@@ -48,6 +48,31 @@
 
 {%- endmacro -%}
 
+{% macro model_input_output(ml_input, ml_output) %}
+
+    {% set io -%}
+        input(
+            {{ ', '.join(ml_input) }}
+        )
+        output(
+            {{ ', '.join(ml_output) }}
+        )
+    {%- endset %}
+
+    {%- do return(io) -%}
+
+{%- endmacro -%}
+
+{% macro model_remote(ml_remote) %}
+
+    {% set remote -%}
+        remote with connection `{{ml_remote}}`
+    {%- endset %}
+
+    {%- do return(remote) -%}
+
+{%- endmacro -%}
+
 {% macro create_model_as(relation, sql) -%}
     {{
         adapter.dispatch(
@@ -64,6 +89,9 @@
 
 {% macro bigquery__create_model_as(relation, sql) %}
     {%- set ml_transform = config.get('ml_transform', []) -%}
+    {%- set ml_input = config.get('ml_input', []) -%}
+    {%- set ml_output = config.get('ml_output', []) -%}
+    {%- set ml_remote = config.get('ml_remote', none) -%}
     {%- set ml_config = config.get('ml_config', {}) -%}
     {%- set raw_labels = config.get('labels', {}) -%}
     {%- set sql_header = config.get('sql_header', none) -%}
@@ -71,7 +99,9 @@
     {{ sql_header if sql_header is not none }}
 
     create or replace model {{ relation }}
-    {{ dbt_ml.model_transform(ml_transform=ml_transform) if len(ml_transform) != 0 }}
+    {{ dbt_ml.model_transform(ml_transform=ml_transform) if ml_transform|length > 0 }}
+    {{ dbt_ml.model_input_output(ml_input=ml_input, ml_output=ml_output) if ml_input|length != 0 }}
+    {{ dbt_ml.model_remote(ml_remote=ml_remote) if ml_remote is not none }}
     {{ dbt_ml.model_options(
         ml_config=ml_config,
         labels=raw_labels
